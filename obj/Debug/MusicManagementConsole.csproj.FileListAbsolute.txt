@@ -1,0 +1,8 @@
+D:\DotNet\MusicManagementConsole\bin\Debug\MusicManagementConsole.exe.config
+D:\DotNet\MusicManagementConsole\bin\Debug\MusicManagementConsole.exe
+D:\DotNet\MusicManagementConsole\bin\Debug\MusicManagementConsole.pdb
+D:\DotNet\MusicManagementConsole\obj\Debug\MusicManagementConsole.csproj.AssemblyReference.cache
+D:\DotNet\MusicManagementConsole\obj\Debug\MusicManagementConsole.csproj.SuggestedBindingRedirects.cache
+D:\DotNet\MusicManagementConsole\obj\Debug\MusicManagementConsole.csproj.CoreCompileInputs.cache
+D:\DotNet\MusicManagementConsole\obj\Debug\MusicManagementConsole.exe
+D:\DotNet\MusicManagementConsole\obj\Debug\MusicManagementConsole.pdb
