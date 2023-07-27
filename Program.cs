@@ -198,7 +198,8 @@ namespace MusicManagementConsole
                 bool artistMenu(SqlConnection conn, int artistId)
                 {
                 artistMenu:
-                    bool artistMenuExitVal = false;
+                    Console.Clear();
+                    bool artistMenuExitVal = true;
                     Console.WriteLine("\n-----ArtistMenu-----");
                     Console.WriteLine("Create Album = 1");
                     Console.WriteLine("Add a track to a Album = 2");
@@ -239,7 +240,6 @@ namespace MusicManagementConsole
 
                 void createAlbum(SqlConnection conn, int artistId)
                 {
-                    Console.Clear();
                     Console.WriteLine("Artist ID: " + artistId);
                     Console.Write("Enter AlbumId: ");
                     char albumId = Console.ReadKey().KeyChar;
@@ -259,7 +259,7 @@ namespace MusicManagementConsole
                         command.Parameters.AddWithValue("@coverArt", coverArt);
                         command.ExecuteNonQuery();
                     }
-                    Console.WriteLine("New album created successfully.");
+                    Console.WriteLine("New album created successfully. Press enter to continue.");
                     Console.ReadLine();
                 }
 
@@ -277,10 +277,11 @@ namespace MusicManagementConsole
                     switch (artistMusicMenuChoice)
                     {
                         case '1':
-                            viewMyAlbum(conn, artistId);
+                            viewMyAlbums(conn, artistId);
                             break;
 
                         case '2':
+                            viewAllAlbums(conn);
                             break;
 
                         case '3':
@@ -296,7 +297,7 @@ namespace MusicManagementConsole
                     return val;
                 }
 
-                void viewMyAlbum(SqlConnection conn, int aritstId)
+                void viewMyAlbums(SqlConnection conn, int aritstId)
                 {
                     String selectQuery = "SELECT * from MSS.Albums WHERE artist_id=@artistId";
                     using(SqlCommand command = new SqlCommand(selectQuery, conn))
@@ -304,12 +305,12 @@ namespace MusicManagementConsole
                         command.Parameters.AddWithValue("@artistId", aritstId);
                         SqlDataReader reader = command.ExecuteReader();
 
-                        Console.WriteLine("\nAlumId\tAlbumName\tReleaseDate\tCoverArt\n");
+                        Console.WriteLine("\nAlumId\tAlbumName\tReleaseDate\t\tCoverArt\n");
                         while (reader.Read())
                         {
                             int albumId = (int)reader["album_id"];
                             String albumName = (String)reader["album_name"];
-                            String releaseDate = (String)reader["release_date"];
+                            DateTime releaseDate = (DateTime)reader["release_date"];
                             String coverArt = (String)reader["cover_art"];
 
                             Console.WriteLine(albumId + "\t" + albumName + "\t" + releaseDate + "\t" + coverArt);
@@ -317,6 +318,26 @@ namespace MusicManagementConsole
                         reader.Close();
 
 
+                    }
+                }
+
+                void viewAllAlbums(SqlConnection conn)
+                {
+                    String selectQuery = "SELECT * FROM MSS.Albums";
+                    using(SqlCommand command =  new SqlCommand(selectQuery, conn))
+                    {
+                        SqlDataReader reader = command.ExecuteReader();
+
+                        while(reader.Read())
+                        {
+                            int albumId = (int)reader["album_id"];
+                            String albumName = (String)reader["album_name"];
+                            DateTime releaseDate = (DateTime)reader["release_date"];
+                            String coverArt = (String)reader["cover_art"];
+
+                            Console.WriteLine(albumId + "\t" + albumName + "\t" + releaseDate + "\t" + coverArt);
+                        }
+                        reader.Close();
                     }
                 }
 
