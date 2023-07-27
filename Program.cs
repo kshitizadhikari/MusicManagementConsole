@@ -147,7 +147,7 @@ namespace MusicManagementConsole
                     Console.WriteLine("Create Artist Menu\n");
                     Console.Write("Enter Artist Name: ");
                     String artistName = Console.ReadLine();
-                    Console.Write("Enter Emai: ");
+                    Console.Write("Enter Email: ");
                     String email = Console.ReadLine();
                     Console.Write("Enter password: ");
                     String password = Console.ReadLine();
@@ -190,7 +190,8 @@ namespace MusicManagementConsole
                     }
                     else
                     {
-                        Console.WriteLine("No such Artist exists.");
+                        Console.WriteLine("\nNo such Artist exists. Press enter to continue.");
+                        Console.ReadLine();
                         reader.Close();
                         return 0;
                     }
@@ -199,7 +200,6 @@ namespace MusicManagementConsole
                 bool artistMenu(SqlConnection conn, int artistId)
                 {
                 artistMenu:
-                    Console.Clear();
                     bool artistMenuExitVal = true;
                     Console.WriteLine("\n-----ArtistMenu-----");
                     Console.WriteLine("Create Album = 1");
@@ -208,7 +208,6 @@ namespace MusicManagementConsole
                     Console.WriteLine("Goto MainMenu = 4");
                     Console.Write("\nEnter your choice: ");
                     char artistChoice = Console.ReadKey().KeyChar;
-                    Console.Clear();
                     switch (artistChoice)
                     {
                         case '1':
@@ -239,7 +238,7 @@ namespace MusicManagementConsole
                             break;
 
                         default:
-                            Console.WriteLine("Invalid Input. Press enter to continue.");
+                            Console.WriteLine("\nInvalid Input. Press enter to continue.");
                             Console.ReadLine();
                             goto artistMenu;
                             break;
@@ -284,11 +283,20 @@ namespace MusicManagementConsole
                 bool artistAddTrack(SqlConnection conn, int artistId)
                 {
                     bool artistAddTrackExitVal = true;
+                    int albumIdInt;
                     bool flag = false;
                     int trackId;
                     viewMyAlbums(conn, artistId);
+                    albumIdTrackGoto:
                     Console.Write("Enter Album ID that you want to add track to: ");
                     String albumId = Console.ReadLine();
+                    if (int.TryParse(albumId, out albumIdInt)) ;
+                    else
+                    {
+                        Console.WriteLine("Invalid Input. Press enter to try again.");
+                        Console.ReadLine();
+                        goto albumIdTrackGoto;
+                    }
                     String selectQuery = "SELECT * from MSS.Albums where artist_id=@artistId and album_id=@albumId";
                     using (SqlCommand command = new SqlCommand(selectQuery, conn))
                     {
@@ -302,16 +310,35 @@ namespace MusicManagementConsole
                         }
                         else
                         {
+
                             Console.WriteLine("No such album exists. Press enter to continue.");
                             Console.ReadLine();
                         }
                         reader.Close();
                     }
 
+                   
+
                     if (flag)
                     {
+                        String trackSelectQuery = "SELECT tr.artist_id, tr.album_id, al.album_name, tr.track_id, tr.track_name, tr.duration from MSS.Tracks tr join MSS.Albums al on tr.artist_id = al.artist_id and tr.album_id = al.album_id where tr.artist_id=@artistId and tr.album_id=@albumId group by tr.artist_id, tr.album_id, al.album_name, tr.track_id, tr.track_name";
+                        using (SqlCommand command = new SqlCommand(trackSelectQuery, conn))
+                        {
+                            command.Parameters.AddWithValue("@artistId", artistId);
+                            command.Parameters.AddWithValue("@albumId", albumId);
+
+                            SqlDataReader reader = command.ExecuteReader();
+
+                            Console.WriteLine("\nAlbumId\tAlbumName\tTrackId\tTrackName\tDuration");
+
+                            while (reader.Read())
+                            {
+                                Console.WriteLine(reader["album_id"] + "\t" + (String)reader["album_name"] + "\t" + (int)reader["track_id"] + "\t" + (String)reader["track_name"] + "\t" + (String)reader["duration"]);
+                            }
+                            reader.Close();
+                        }
                     trackIdGoto:
-                        Console.Write("Enter new Track Id: ");
+                        Console.Write("\nEnter new Track Id: ");
                         String trackIdStr = Console.ReadLine();
                         if (int.TryParse(trackIdStr, out trackId))
                         {
@@ -338,11 +365,16 @@ namespace MusicManagementConsole
                             command.Parameters.AddWithValue("@trackName", trackName);
                             command.Parameters.AddWithValue("@duration", duration);
                             command.ExecuteNonQuery();
+
+                            Console.WriteLine("\nNew Track Added to Album successfully. Press enter to continue");
+                            Console.ReadLine();
                         }
                     }
                 addOrExitTrackGoto:
+                    Console.Clear();
                     Console.WriteLine("Add another new Track = 1");
                     Console.WriteLine("Go Back = 2");
+                    Console.Write("\nEnter your choice: ");
                     char trackChoice = Console.ReadKey().KeyChar;
                     switch (trackChoice)
                     {
@@ -429,15 +461,16 @@ namespace MusicManagementConsole
                     using (SqlCommand command = new SqlCommand(selectQuery, conn))
                     {
                         SqlDataReader reader = command.ExecuteReader();
-                        Console.WriteLine("\n\nAlumId\tAlbumName\tReleaseDate\t\tCoverArt\n");
+                        Console.WriteLine("\n\nArtistId\tAlumId\tAlbumName\tReleaseDate\t\tCoverArt\n");
                         while (reader.Read())
                         {
+                            int artistIdAll = (int)reader["artist_id"];
                             int albumId = (int)reader["album_id"];
                             String albumName = (String)reader["album_name"];
                             DateTime releaseDate = (DateTime)reader["release_date"];
                             String coverArt = (String)reader["cover_art"];
 
-                            Console.WriteLine(albumId + "\t" + albumName + "\t" + releaseDate + "\t" + coverArt);
+                            Console.WriteLine(artistIdAll + "\t\t" + albumId + "\t" + albumName + "\t" + releaseDate + "\t" + coverArt);
                         }
                         reader.Close();
                     }
@@ -450,7 +483,11 @@ namespace MusicManagementConsole
                 exitTryAgain:
                     Console.Write("\nAre you sure? (y / n): ");
                     char val = Console.ReadKey().KeyChar;
-                    if (val == 'y') return false;
+                    if (val == 'y')
+                    {
+                        Console.Clear();
+                        return false;
+                    }
                     else if (val == 'n') return true;
                     else goto exitTryAgain;
                 }
