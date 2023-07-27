@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
+using System.Security.Cryptography;
 
 namespace MusicManagementConsole
 {
@@ -32,7 +33,7 @@ namespace MusicManagementConsole
                     Console.WriteLine("Login as User = 3");
                     Console.WriteLine("Login as Artist = 4");
                     Console.WriteLine("Exit = 5");
-                    Console.Write("\nEnter your choice: ")
+                    Console.Write("\nEnter your choice: ");
                     char mainChoice = Console.ReadKey().KeyChar;
 
                     int userId = 0;
@@ -71,7 +72,6 @@ namespace MusicManagementConsole
                                 while(isArtistMenuRunning)
                                 {
                                 isArtistMenuRunning = artistMenu(conn, artistId);
-
                                 }
                             }
                             break;
@@ -97,6 +97,7 @@ namespace MusicManagementConsole
                     String email = Console.ReadLine();
                     Console.Write("Enter password: ");
                     String password = Console.ReadLine();
+                    String passwordHash = HashString(password);
                     Console.Write("Enter bio: ");
                     String bio = Console.ReadLine();
                     String insertQuery = "INSERT INTO MSS.Users(userName, email, password, bio) VALUES(@userName, @email, @password, @bio)";
@@ -104,7 +105,7 @@ namespace MusicManagementConsole
                     {
                         command.Parameters.AddWithValue("@userName", userName);
                         command.Parameters.AddWithValue("@email", email);
-                        command.Parameters.AddWithValue("@password", password);
+                        command.Parameters.AddWithValue("@password", passwordHash);
                         command.Parameters.AddWithValue("@bio", bio);
                         command.ExecuteNonQuery();
                     }
@@ -117,11 +118,12 @@ namespace MusicManagementConsole
                     String email = Console.ReadLine();
                     Console.Write("Enter password: ");
                     String password = Console.ReadLine();
-                    String selectQuery = "SELECT * FROM MSS.Users where email=@email and password=@password";
+                    String passwordHash = HashString(password);
+                    String selectQuery = "SELECT * FROM MSS.Users where email=@email and password=@passwordHash";
                     using (SqlCommand cmd1 = new SqlCommand(selectQuery, conn))
                     {
                         cmd1.Parameters.AddWithValue("@email", email);
-                        cmd1.Parameters.AddWithValue("@password", password);
+                        cmd1.Parameters.AddWithValue("@passwordHash", passwordHash);
                         SqlDataReader reader = cmd1.ExecuteReader();
                         if (reader.Read())
                         {
@@ -138,8 +140,6 @@ namespace MusicManagementConsole
 
                 }
 
-
-
                 void createArtist(SqlConnection conn)
                 {
                     Console.Clear();
@@ -150,6 +150,7 @@ namespace MusicManagementConsole
                     String email = Console.ReadLine();
                     Console.Write("Enter password: ");
                     String password = Console.ReadLine();
+                    String passwordHash = HashString(password);
                     Console.Write("Enter genre: ");
                     String genre = Console.ReadLine();
                     Console.Write("Enter bio: ");
@@ -158,7 +159,7 @@ namespace MusicManagementConsole
                     using (SqlCommand command = new SqlCommand(insertQuery, conn))
                     {
                         command.Parameters.AddWithValue("@artistName", artistName);
-                        command.Parameters.AddWithValue("@password", password);
+                        command.Parameters.AddWithValue("@password", passwordHash);
                         command.Parameters.AddWithValue("@email", email);
                         command.Parameters.AddWithValue("@genre", genre);
                         command.Parameters.AddWithValue("@bio", bio);
@@ -174,10 +175,11 @@ namespace MusicManagementConsole
                     String email = Console.ReadLine();
                     Console.Write("Enter password: ");
                     String password = Console.ReadLine();
-                    String selectQuery = "SELECT * FROM MSS.Artists where aEmail=@email and aPassword=@password";
+                    String passwordHash = HashString(password);
+                    String selectQuery = "SELECT * FROM MSS.Artists where aEmail=@email and aPassword=@passwordHash";
                     SqlCommand cmd1 = new SqlCommand(selectQuery, conn);
                     cmd1.Parameters.AddWithValue("@email", email);
-                    cmd1.Parameters.AddWithValue("@password", password);
+                    cmd1.Parameters.AddWithValue("@passwordHash", passwordHash);
                     SqlDataReader reader = cmd1.ExecuteReader();
                     if (reader.Read())
                     {
@@ -200,7 +202,7 @@ namespace MusicManagementConsole
                     Console.WriteLine("\n-----ArtistMenu-----");
                     Console.WriteLine("Create Album = 1");
                     Console.WriteLine("Add a track to a Album = 2");
-                    Console.WriteLine("View your Music = 3");
+                    Console.WriteLine("View Music = 3");
                     Console.WriteLine("Goto MainMenu = 4");
                     Console.Write("\nEnter your choice: ");
                     char artistChoice = Console.ReadKey().KeyChar;
@@ -215,6 +217,11 @@ namespace MusicManagementConsole
                             break;
 
                         case '3':
+                            bool isArtistMusicMenuRunning = true;
+                            while (isArtistMusicMenuRunning)
+                            {
+                             isArtistMusicMenuRunning=artistMusicMenu(conn, artistId);
+                            }
                             break;
 
                         case '4':
@@ -222,7 +229,8 @@ namespace MusicManagementConsole
                             break;
 
                         default:
-                            Console.WriteLine("Invalid Input");
+                            Console.WriteLine("Invalid Input. Press Enter");
+                            Console.ReadLine();
                             goto artistMenu;
                             break;
                     }
@@ -253,7 +261,63 @@ namespace MusicManagementConsole
                     }
                     Console.WriteLine("New album created successfully.");
                     Console.ReadLine();
-                    artistMenu(conn, artistId);
+                }
+
+                bool artistMusicMenu(SqlConnection conn, int artistId)
+                {
+                artistMusicMenu:
+                    bool val = true;
+                    Console.WriteLine("\n-----Music Menu-----");
+                    Console.WriteLine("My Albums = 1");
+                    Console.WriteLine("Everyone's Albums = 2");
+                    Console.WriteLine("Go back to AristMenu = 3");
+                    Console.Write("\nEnter your choice: ");
+                    char artistMusicMenuChoice = Console.ReadKey().KeyChar;
+
+                    switch (artistMusicMenuChoice)
+                    {
+                        case '1':
+                            viewMyAlbum(conn, artistId);
+                            break;
+
+                        case '2':
+                            break;
+
+                        case '3':
+                            //go back to artist menu
+                            val = exit();
+                            break;
+
+                        default:
+                            Console.WriteLine("\nInvalid choice. Press Enter to try again.");
+                            Console.ReadLine();
+                            goto artistMusicMenu;
+                    }
+                    return val;
+                }
+
+                void viewMyAlbum(SqlConnection conn, int aritstId)
+                {
+                    String selectQuery = "SELECT * from MSS.Albums WHERE artist_id=@artistId";
+                    using(SqlCommand command = new SqlCommand(selectQuery, conn))
+                    {
+                        command.Parameters.AddWithValue("@artistId", aritstId);
+                        SqlDataReader reader = command.ExecuteReader();
+
+                        Console.WriteLine("\nAlumId\tAlbumName\tReleaseDate\tCoverArt\n");
+                        while (reader.Read())
+                        {
+                            int albumId = (int)reader["album_id"];
+                            String albumName = (String)reader["album_name"];
+                            String releaseDate = (String)reader["release_date"];
+                            String coverArt = (String)reader["cover_art"];
+
+                            Console.WriteLine(albumId + "\t" + albumName + "\t" + releaseDate + "\t" + coverArt);
+                        }
+                        reader.Close();
+
+
+                    }
                 }
 
                 bool exit()
@@ -264,6 +328,29 @@ namespace MusicManagementConsole
                     if (val == 'y') return false;
                     else if (val == 'n') return true;
                     else goto exitTryAgain;
+                }
+
+                String HashString(string text, string salt = "")
+                {
+                    if (String.IsNullOrEmpty(text))
+                    {
+                        return String.Empty;
+                    }
+
+                    // Uses SHA256 to create the hash
+                    using (var sha = new System.Security.Cryptography.SHA256Managed())
+                    {
+                        // Convert the string to a byte array first, to be processed
+                        byte[] textBytes = System.Text.Encoding.UTF8.GetBytes(text + salt);
+                        byte[] hashBytes = sha.ComputeHash(textBytes);
+
+                        // Convert back to a string, removing the '-' that BitConverter adds
+                        string hash = BitConverter
+                            .ToString(hashBytes)
+                            .Replace("-", String.Empty);
+
+                        return hash;
+                    }
                 }
             }
             catch (SqlException ex)
