@@ -212,13 +212,21 @@ namespace MusicManagementConsole
                     switch (artistChoice)
                     {
                         case '1':
+                            //create album
                             createAlbum(conn, artistId);
                             break;
 
                         case '2':
+                            //add track to album
+                            bool isAddTrack = true;
+                            while (isAddTrack)
+                            {
+                                isAddTrack = artistAddTrack(conn, artistId);
+                            }
                             break;
 
                         case '3':
+                            //artist music menu
                             bool isArtistMusicMenuRunning = true;
                             while (isArtistMusicMenuRunning)
                             {
@@ -271,6 +279,89 @@ namespace MusicManagementConsole
                     }
                     Console.WriteLine("New album created successfully. Press enter to continue.");
                     Console.ReadLine();
+                }
+
+                bool artistAddTrack(SqlConnection conn, int artistId)
+                {
+                    bool artistAddTrackExitVal = true;
+                    bool flag = false;
+                    int trackId;
+                    viewMyAlbums(conn, artistId);
+                    Console.Write("Enter Album ID that you want to add track to: ");
+                    String albumId = Console.ReadLine();
+                    String selectQuery = "SELECT * from MSS.Albums where artist_id=@artistId and album_id=@albumId";
+                    using (SqlCommand command = new SqlCommand(selectQuery, conn))
+                    {
+                        command.Parameters.AddWithValue("@artistId", artistId);
+                        command.Parameters.AddWithValue("@albumId", albumId);
+
+                        SqlDataReader reader = command.ExecuteReader();
+                        if (reader.Read())
+                        {
+                            flag = true;
+                        }
+                        else
+                        {
+                            Console.WriteLine("No such album exists. Press enter to continue.");
+                            Console.ReadLine();
+                        }
+                        reader.Close();
+                    }
+
+                    if (flag)
+                    {
+                    trackIdGoto:
+                        Console.Write("Enter new Track Id: ");
+                        String trackIdStr = Console.ReadLine();
+                        if (int.TryParse(trackIdStr, out trackId))
+                        {
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid Input. Press enter to try again.");
+                            Console.ReadLine();
+                            goto trackIdGoto;
+                        }
+
+                        Console.Write("Enter new Track Name: ");
+                        String trackName = Console.ReadLine();
+                        Console.Write("Enter duration: ");
+                        String duration = Console.ReadLine();
+
+                        String insertQuery = "INSERT INTO MSS.Tracks(artist_id, album_id, track_id, track_name, duration) VALUES(@artistId, @albumId, @trackId, @trackName, @duration)";
+                        using (SqlCommand command = new SqlCommand(insertQuery, conn))
+                        {
+                            command.Parameters.AddWithValue("@artistId", artistId);
+                            command.Parameters.AddWithValue("@albumId", albumId);
+                            command.Parameters.AddWithValue("@trackId", trackId);
+                            command.Parameters.AddWithValue("@trackName", trackName);
+                            command.Parameters.AddWithValue("@duration", duration);
+                            command.ExecuteNonQuery();
+                        }
+                    }
+                addOrExitTrackGoto:
+                    Console.WriteLine("Add another new Track = 1");
+                    Console.WriteLine("Go Back = 2");
+                    char trackChoice = Console.ReadKey().KeyChar;
+                    switch (trackChoice)
+                    {
+                        case '1':
+                            break;
+
+                        case '2':
+                            artistAddTrackExitVal = exit();
+                            break;
+
+                        default:
+                            Console.WriteLine("Invalid choice. Press enter to try again.");
+                            Console.ReadLine();
+                            goto addOrExitTrackGoto;
+                            break;
+                    }
+
+
+                    return artistAddTrackExitVal;
                 }
 
                 bool artistMusicMenu(SqlConnection conn, int artistId)
@@ -328,7 +419,7 @@ namespace MusicManagementConsole
                         }
                         reader.Close();
                     }
-                    Console.WriteLine("\nPress enter to go back.");
+                    Console.WriteLine("\nPress enter to continue.");
                     Console.ReadLine();
                 }
 
