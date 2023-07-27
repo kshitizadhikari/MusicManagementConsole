@@ -69,9 +69,9 @@ namespace MusicManagementConsole
                             if (artistId != 0)
                             {
                                 Console.Clear();
-                                while(isArtistMenuRunning)
+                                while (isArtistMenuRunning)
                                 {
-                                isArtistMenuRunning = artistMenu(conn, artistId);
+                                    isArtistMenuRunning = artistMenu(conn, artistId);
                                 }
                             }
                             break;
@@ -82,7 +82,8 @@ namespace MusicManagementConsole
                             break;
 
                         default:
-                            Console.WriteLine("Invalid Choice");
+                            Console.WriteLine("\nInvalid Choice. Press enter to try again.");
+                            Console.ReadLine();
                             break;
                     }
                 }
@@ -221,7 +222,7 @@ namespace MusicManagementConsole
                             bool isArtistMusicMenuRunning = true;
                             while (isArtistMusicMenuRunning)
                             {
-                             isArtistMusicMenuRunning=artistMusicMenu(conn, artistId);
+                                isArtistMusicMenuRunning = artistMusicMenu(conn, artistId);
                             }
                             break;
 
@@ -230,7 +231,7 @@ namespace MusicManagementConsole
                             break;
 
                         default:
-                            Console.WriteLine("Invalid Input. Press Enter");
+                            Console.WriteLine("Invalid Input. Press enter to continue.");
                             Console.ReadLine();
                             goto artistMenu;
                             break;
@@ -240,12 +241,21 @@ namespace MusicManagementConsole
 
                 void createAlbum(SqlConnection conn, int artistId)
                 {
+                    int albumIdInt;
                     Console.WriteLine("Artist ID: " + artistId);
+                albumIdGoto:
                     Console.Write("Enter AlbumId: ");
-                    char albumId = Console.ReadKey().KeyChar;
-                    Console.Write("\nEnter Album Name: ");
+                    String albumId = Console.ReadLine();
+                    if (int.TryParse(albumId, out albumIdInt)) ;
+                    else
+                    {
+                        Console.WriteLine("Invalid Input. Press enter to try again.");
+                        Console.ReadLine();
+                        goto albumIdGoto;
+                    }
+                    Console.Write("Enter Album Name: ");
                     String albumName = Console.ReadLine();
-                    Console.Write("Enter Release Date: ");
+                    Console.Write("Enter Release Date (yyyy-mm-dd): ");
                     String releaseDate = Console.ReadLine();
                     Console.Write("Enter CoverArt: ");
                     String coverArt = Console.ReadLine();
@@ -265,6 +275,7 @@ namespace MusicManagementConsole
 
                 bool artistMusicMenu(SqlConnection conn, int artistId)
                 {
+                    Console.Clear();
                 artistMusicMenu:
                     bool val = true;
                     Console.WriteLine("\n-----Music Menu-----");
@@ -300,12 +311,12 @@ namespace MusicManagementConsole
                 void viewMyAlbums(SqlConnection conn, int aritstId)
                 {
                     String selectQuery = "SELECT * from MSS.Albums WHERE artist_id=@artistId";
-                    using(SqlCommand command = new SqlCommand(selectQuery, conn))
+                    using (SqlCommand command = new SqlCommand(selectQuery, conn))
                     {
                         command.Parameters.AddWithValue("@artistId", aritstId);
                         SqlDataReader reader = command.ExecuteReader();
 
-                        Console.WriteLine("\nAlumId\tAlbumName\tReleaseDate\t\tCoverArt\n");
+                        Console.WriteLine("\n\nAlumId\tAlbumName\tReleaseDate\t\tCoverArt\n");
                         while (reader.Read())
                         {
                             int albumId = (int)reader["album_id"];
@@ -316,19 +327,19 @@ namespace MusicManagementConsole
                             Console.WriteLine(albumId + "\t" + albumName + "\t" + releaseDate + "\t" + coverArt);
                         }
                         reader.Close();
-
-
                     }
+                    Console.WriteLine("\nPress enter to go back.");
+                    Console.ReadLine();
                 }
 
                 void viewAllAlbums(SqlConnection conn)
                 {
                     String selectQuery = "SELECT * FROM MSS.Albums";
-                    using(SqlCommand command =  new SqlCommand(selectQuery, conn))
+                    using (SqlCommand command = new SqlCommand(selectQuery, conn))
                     {
                         SqlDataReader reader = command.ExecuteReader();
-
-                        while(reader.Read())
+                        Console.WriteLine("\n\nAlumId\tAlbumName\tReleaseDate\t\tCoverArt\n");
+                        while (reader.Read())
                         {
                             int albumId = (int)reader["album_id"];
                             String albumName = (String)reader["album_name"];
@@ -339,6 +350,8 @@ namespace MusicManagementConsole
                         }
                         reader.Close();
                     }
+                    Console.WriteLine("\nPress enter to go back.");
+                    Console.ReadLine();
                 }
 
                 bool exit()
