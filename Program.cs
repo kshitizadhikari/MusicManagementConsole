@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
 using System.Security.Cryptography;
+using System.ComponentModel.Design;
 
 namespace MusicManagementConsole
 {
@@ -253,7 +254,10 @@ namespace MusicManagementConsole
                 albumIdGoto:
                     Console.Write("Enter AlbumId: ");
                     String albumId = Console.ReadLine();
-                    if (int.TryParse(albumId, out albumIdInt)) ;
+                    if (int.TryParse(albumId, out albumIdInt))
+                    {
+
+                    }    
                     else
                     {
                         Console.WriteLine("Invalid Input. Press enter to try again.");
@@ -284,13 +288,17 @@ namespace MusicManagementConsole
                 {
                     bool artistAddTrackExitVal = true;
                     int albumIdInt;
+                    List<int> trackIdList = new List<int>();
                     bool flag = false;
                     int trackId;
                     viewMyAlbums(conn, artistId);
-                    albumIdTrackGoto:
+                albumIdTrackGoto:
                     Console.Write("Enter Album ID that you want to add track to: ");
                     String albumId = Console.ReadLine();
-                    if (int.TryParse(albumId, out albumIdInt)) ;
+                    if (int.TryParse(albumId, out albumIdInt))
+                    {
+
+                    }
                     else
                     {
                         Console.WriteLine("Invalid Input. Press enter to try again.");
@@ -317,11 +325,11 @@ namespace MusicManagementConsole
                         reader.Close();
                     }
 
-                   
+
 
                     if (flag)
                     {
-                        String trackSelectQuery = "SELECT tr.artist_id, tr.album_id, al.album_name, tr.track_id, tr.track_name, tr.duration from MSS.Tracks tr join MSS.Albums al on tr.artist_id = al.artist_id and tr.album_id = al.album_id where tr.artist_id=@artistId and tr.album_id=@albumId group by tr.artist_id, tr.album_id, al.album_name, tr.track_id, tr.track_name";
+                        String trackSelectQuery = "SELECT tr.artist_id, tr.album_id, al.album_name, tr.track_id, tr.track_name, tr.duration from MSS.Tracks tr join MSS.Albums al on tr.artist_id = al.artist_id and tr.album_id = al.album_id where tr.artist_id=@artistId and tr.album_id=@albumId group by tr.artist_id, tr.album_id, al.album_name, tr.track_id, tr.track_name, tr.duration";
                         using (SqlCommand command = new SqlCommand(trackSelectQuery, conn))
                         {
                             command.Parameters.AddWithValue("@artistId", artistId);
@@ -333,7 +341,9 @@ namespace MusicManagementConsole
 
                             while (reader.Read())
                             {
-                                Console.WriteLine(reader["album_id"] + "\t" + (String)reader["album_name"] + "\t" + (int)reader["track_id"] + "\t" + (String)reader["track_name"] + "\t" + (String)reader["duration"]);
+                                int trackIdListItem = (int)reader["track_id"];
+                                trackIdList.Add(trackIdListItem);
+                                Console.WriteLine(reader["album_id"] + "\t" + (String)reader["album_name"] + "\t" + trackIdListItem + "\t" + (String)reader["track_name"] + "\t" + (String)reader["duration"]);
                             }
                             reader.Close();
                         }
@@ -342,7 +352,11 @@ namespace MusicManagementConsole
                         String trackIdStr = Console.ReadLine();
                         if (int.TryParse(trackIdStr, out trackId))
                         {
-
+                            if (trackIdList.Contains(trackId))
+                            {
+                                Console.WriteLine("Track Id " + trackId + " already exists. Enter a different Track Id.");
+                                goto trackIdGoto;
+                            }
                         }
                         else
                         {
@@ -451,6 +465,26 @@ namespace MusicManagementConsole
                         }
                         reader.Close();
                     }
+                    int albumViewInt;
+                albumViewGoto:
+                    Console.Write("\nEnter the Album Id that you want to view: ");
+                    String albumView = Console.ReadLine();
+                    if (int.TryParse(albumView, out albumViewInt))
+                    {
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid Input. Press enter to try again.");
+                        Console.ReadLine();
+                        goto albumViewGoto;
+                    }
+                    switch (albumView)
+                    {
+                        case "1":
+                            viewAlbumTracks(conn, aritstId, albumViewInt);
+                            break;
+                    }
                     Console.WriteLine("\nPress enter to continue.");
                     Console.ReadLine();
                 }
@@ -476,6 +510,29 @@ namespace MusicManagementConsole
                     }
                     Console.WriteLine("\nPress enter to go back.");
                     Console.ReadLine();
+                }
+
+                void viewAlbumTracks(SqlConnection conn, int artistId, int albumId)
+                {
+                    List<int> trackIdList = new List<int>();
+                    String trackSelectQuery = "SELECT tr.artist_id, tr.album_id, al.album_name, tr.track_id, tr.track_name, tr.duration from MSS.Tracks tr join MSS.Albums al on tr.artist_id = al.artist_id and tr.album_id = al.album_id where tr.artist_id=@artistId and tr.album_id=@albumId group by tr.artist_id, tr.album_id, al.album_name, tr.track_id, tr.track_name, tr.duration";
+                    using (SqlCommand command = new SqlCommand(trackSelectQuery, conn))
+                    {
+                        command.Parameters.AddWithValue("@artistId", artistId);
+                        command.Parameters.AddWithValue("@albumId", albumId);
+
+                        SqlDataReader reader = command.ExecuteReader();
+
+                        Console.WriteLine("\nAlbumId\tAlbumName\tTrackId\tTrackName\tDuration");
+
+                        while (reader.Read())
+                        {
+                            int trackIdListItem = (int)reader["track_id"];
+                            trackIdList.Add(trackIdListItem);
+                            Console.WriteLine(reader["album_id"] + "\t" + (String)reader["album_name"] + "\t" + trackIdListItem + "\t" + (String)reader["track_name"] + "\t" + (String)reader["duration"]);
+                        }
+                        reader.Close();
+                    }
                 }
 
                 bool exit()
