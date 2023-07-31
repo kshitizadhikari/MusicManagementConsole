@@ -471,28 +471,8 @@ namespace MusicManagementConsole
                     }
                     Console.WriteLine("Press enter to continue");
                     Console.ReadLine();
-                    //    int albumViewInt;
-                    //albumViewGoto:
-                    //    Console.Write("\nEnter the Album Id that you want to view: ");
-                    //    String albumView = Console.ReadLine();
-                    //    if (int.TryParse(albumView, out albumViewInt))
-                    //    {
 
-                    //    }
-                    //    else
-                    //    {
-                    //        Console.WriteLine("Invalid Input. Press enter to try again.");
-                    //        Console.ReadLine();
-                    //        goto albumViewGoto;
-                    //    }
-                    //    switch (albumView)
-                    //    {
-                    //        case "1":
-                    //            viewAlbumTracks(conn, aritstId, albumViewInt);
-                    //            break;
-                    //    }
-                    //    Console.WriteLine("\nPress enter to continue.");
-                    //    Console.ReadLine();
+                    viewAlbumTracks(conn);
                 }
 
                 void viewAllAlbums(SqlConnection conn)
@@ -514,6 +494,16 @@ namespace MusicManagementConsole
                         }
                         reader.Close();
                     }
+
+                    viewAlbumTracks(conn);
+                }
+
+                void viewAlbumTracks(SqlConnection conn)
+                {
+                    Console.Clear();
+                    List<int> trackIdList = new List<int>();
+                    int albumPrimaryKey = 0;
+                    bool albumGet = true;
                     //get artist id to view track
                     int artistViewInt;
                 artistViewGoto:
@@ -544,20 +534,11 @@ namespace MusicManagementConsole
                         Console.ReadLine();
                         goto albumViewGoto;
                     }
-                    viewAlbumTracks(conn, artistViewInt, albumViewInt);
-                }
-
-                void viewAlbumTracks(SqlConnection conn, int artistId, int albumId)
-                {
-                    Console.Clear();
-                    List<int> trackIdList = new List<int>();
-                    int albumPrimaryKey = 0;
-                    bool albumGet = true;
                     String albumSelectQuery = "SELECT id from MSS.Albums WHERE artist_id=@artistId and albumId=@albumId";
                     using (SqlCommand command = new SqlCommand(albumSelectQuery, conn))
                     {
-                        command.Parameters.AddWithValue("@artistId", artistId);
-                        command.Parameters.AddWithValue("@albumId", albumId);
+                        command.Parameters.AddWithValue("@artistId", artistViewInt);
+                        command.Parameters.AddWithValue("@albumId", albumViewInt);
                         SqlDataReader reader = command.ExecuteReader();
                         if (reader.Read())
                         {
@@ -577,8 +558,8 @@ namespace MusicManagementConsole
                         String trackSelectQuery = "SELECT al.artist_id, al.albumId, al.album_name, tr.trackId, tr.track_name, tr.duration from MSS.Tracks tr join MSS.Albums al on tr.album_id = al.id where al.artist_id=@artistId and al.albumId=@albumId group by al.artist_id, al.albumId, al.album_name, tr.trackId, tr.track_name, tr.duration";
                         using (SqlCommand command = new SqlCommand(trackSelectQuery, conn))
                         {
-                            command.Parameters.AddWithValue("@artistId", artistId);
-                            command.Parameters.AddWithValue("@albumId", albumId);
+                            command.Parameters.AddWithValue("@artistId", artistViewInt);
+                            command.Parameters.AddWithValue("@albumId", albumViewInt);
 
                             SqlDataReader reader = command.ExecuteReader();
 
